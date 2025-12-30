@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "title": "Simple LSTM",
+    "type": "paper-reproduction",
+    "reproduction_stage": "Stage 4",
+    "status": "active"
+  },
+  "paper": {
+    "title": "Long Short-Term Memory",
+    "authors": ["Sepp Hochreiter", "Jurgen Schmidhuber"],
+    "year": 1997,
+    "venue": "Neural Computation",
+    "pdf_url": "https://www.bioinf.jku.at/publications/older/2604.pdf"
+  },
+  "links": {
+    "repo": "https://github.com/Project-Aquarius-White/simple-lstm",
+    "website": "https://aquarius.abanhasan.net",
+    "writeup": null
+  }
+}
