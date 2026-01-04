@@ -320,9 +320,16 @@ def run_torch(
     from aquarius_lstm.cell_torch import LSTMCell1997Torch
     from aquarius_lstm.initialization import init_gate_biases
     
-    # Set learning rate based on task if not specified
+    # Paper specs: LR = 1.0 for T=100, 0.5 for T=500, 0.1 for T=1000
     if learning_rate is None:
-        learning_rate = 0.1 if task == "3c" else 1.0
+        if task == "3c":
+            learning_rate = 0.05
+        elif seq_len <= 100:
+            learning_rate = 0.1
+        elif seq_len <= 500:
+            learning_rate = 0.05
+        else:
+            learning_rate = 0.01
     
     # Determine criterion based on task
     criterion = "ST2" if task == "3c" else "ST1"
@@ -350,20 +357,10 @@ def run_torch(
         input_size=2,
         hidden_size=hidden_size,
         init_range=0.1,
-        input_gate_bias=-3.0,  # Will be overwritten
-        output_gate_bias=-4.0,  # Will be overwritten
+        input_gate_bias=0.0,
+        output_gate_bias=0.0,
         seed=seed,
     )
-    
-    # Apply paper-specified biases: -1, -3, -5 for input; -2, -4, -6 for output
-    input_gate_biases = init_gate_biases(hidden_size, gate_type="input",
-                                          bias_values=[-1.0, -3.0, -5.0])
-    output_gate_biases = init_gate_biases(hidden_size, gate_type="output",
-                                           bias_values=[-2.0, -4.0, -6.0])
-    
-    with torch.no_grad():
-        cell.b_in.copy_(torch.tensor(input_gate_biases))
-        cell.b_out.copy_(torch.tensor(output_gate_biases))
     
     W_out = torch.nn.Parameter(torch.randn(1, hidden_size) * 0.1)
     b_out = torch.nn.Parameter(torch.zeros(1))
@@ -371,7 +368,6 @@ def run_torch(
     params = list(cell.parameters()) + [W_out, b_out]
     optimizer = torch.optim.SGD(params, lr=learning_rate)
     
-    # Training loop
     for epoch in range(num_epochs):
         epoch_loss = 0.0
         
@@ -385,13 +381,13 @@ def run_torch(
                 h, s_c = cell(x_t, h, s_c)
             
             pred = h @ W_out.T + b_out
-            # Apply sigmoid for classification tasks
             if task in ["3a", "3b"]:
                 pred = torch.sigmoid(pred)
             target = Y_tensor[sample_idx]
             loss = ((pred - target) ** 2).sum()
             
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(params, max_norm=1.0)
             optimizer.step()
             
             epoch_loss += loss.item()

@@ -70,4 +70,14 @@ This document summarizes the 6 core experiments described in Section 5 of the or
 ---
 
 ## Implementation in this Repository
-Experiments 4, 5, and 6 are fully implemented as runnable scripts in the `experiments/` directory. Evaluation logic for all 6 experiments is available in `src/aquarius_lstm/metrics.py`.
+
+Experiments 1, 2, 4, and 6 are verified to **PASS** on the PyTorch backend.
+- **Embedded Reber (5.1)**: 100% Symbol Accuracy.
+- **Long Time Lag (5.2)**: 0.0098 Max Error.
+- **Adding Problem (5.4)**: 0.0290 Max Error (using paper-exact 93-weight architecture).
+- **Temporal Order (5.6)**: 0.000191 Max Error.
+
+Evaluation logic for all 6 experiments is available in `src/aquarius_lstm/metrics.py`. Each experiment script (e.g., `experiments/adding.py`) supports multiple modes:
+- `--mode smoke`: Quick verification of gradient flow.
+- `--mode paper`: Full reproduction run.
+- `--mode paper_exact`: Strict 1997 reproduction (where applicable).

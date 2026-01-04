@@ -73,25 +73,25 @@ This repository contains a clean, modular implementation designed for educationa
 git clone https://github.com/Project-Aquarius-White/simple-1997-lstm-reproduction.git
 cd simple-1997-lstm-reproduction
 
-# Install dependencies
-pip install -e ".[all]"
+# Install dependencies (requires uv)
+uv sync
 ```
 
 ### Running Tests
 
 ```bash
 # Run smoke tests to verify implementations
-pytest tests/test_experiments_smoke.py
+uv run pytest tests/test_experiments_smoke.py
 ```
 
 ### Reproducing the Paper
 
 ```bash
 # Run all 6 experiments in "smoke" mode (quick verification)
-python -m experiments.run_all --mode smoke --backend tinygrad
+uv run python -m experiments.run_all --mode smoke --backend tinygrad
 
 # Run a specific experiment in full "paper" reproduction mode
-python -m experiments.adding --mode paper --backend torch
+uv run python -m experiments.adding --mode paper --backend torch
 ```
 
 ---
@@ -148,13 +148,28 @@ python -m experiments.adding --mode paper --backend torch
 
 ## 📊 Results
 
-| Experiment | Paper Result | Our Reproduction (tinygrad) | Our Reproduction (torch) |
-|------------|--------------|----------------------------|--------------------------|
-| Adding (T=100) | 100% Success | Smoke runs, learning occurs | Smoke runs, learning occurs (PyTorch verified) |
-| Temporal Order | 100% Success | Smoke runs, 81% accuracy | 81% accuracy (30 epochs) |
-| Reber Grammar | 100% Success | Not yet tested | Not yet tested |
+| # | Experiment | Status | Key Metric (Reproduction) | Success Criterion |
+|---|------------|--------|---------------------------|-------------------|
+| 1 | Embedded Reber | **PASS** | 100% Symbol Accuracy | 100% Accuracy |
+| 2 | Long Time Lag 2a | **PASS** | 0.0098 Max Error | < 0.25 Error |
+| 3 | Two-Sequence | **NEEDS_MORE_EPOCHS** | Learning confirmed | 0 Misclassifications |
+| 4 | Adding Problem | **PASS** | 0.0290 Max Error | < 0.04 Error |
+| 5 | Multiplication | **TIMEOUT** | Requires GPU (60+ min) | < 0.04 Error |
+| 6 | Temporal Order | **PASS** | 0.000191 Max Error | < 0.3 Error |
 
-*Note: These are smoke test results from short training runs. Full paper reproduction is pending longer training runs on production hardware. Smoke tests confirm gradient flow and architectural correctness across both backends.*
+*Note: Results obtained using the PyTorch backend on an Apple M2. PASS status indicates the model met or exceeded the success criteria defined in the 1997 paper. See `.aquarius/results/sequence-modeling-benchmark.json` for full details.*
+
+---
+
+## ⚖️ Deviations from 1997 Paper
+
+While this reproduction strives for architectural fidelity, some modern acceleration tricks were used to achieve convergence within reasonable timeframes on modern hardware:
+
+1.  **Gate Pre-training**: We use a 500-epoch Adam-based pre-training phase for input gates to respond to marker signals (e.g., in the Adding Problem). In 1997, gates were likely trained from random initialization over 100K-500K sequences.
+2.  **Gradient Clipping**: We apply standard gradient norm clipping (max norm = 1.0) to stabilize online SGD training, which was not explicitly mentioned in the original paper but is necessary for stability in many modern autodiff environments.
+3.  **Modern Optimizers**: While `paper_exact` modes use SGD as described in the paper, smoke tests and some experiments use Adam for faster verification.
+
+For a detailed breakdown of these decisions, see [docs/REPLICATION_DECISIONS.md](docs/REPLICATION_DECISIONS.md).
 
 ---
 

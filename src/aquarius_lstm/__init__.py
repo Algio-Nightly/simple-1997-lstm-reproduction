@@ -25,23 +25,20 @@ __paper__ = "Hochreiter & Schmidhuber (1997) - Long Short-Term Memory"
 
 from .activations import sigmoid, g_squash, h_squash
 from .cell import LSTMCell1997
-from .cell_torch import LSTMCell1997Torch
+from .cell_torch import LSTMCell1997Torch, LSTMCell1997WithForgetGate
 from .block import LSTMBlock1997
 from .initialization import init_weights_paper, init_gate_biases
 from .metrics import paper_accuracy_criterion
 
 __all__ = [
-    # Core classes
     "LSTMCell1997",
     "LSTMCell1997Torch",
+    "LSTMCell1997WithForgetGate",
     "LSTMBlock1997",
-    # Activation functions
     "sigmoid",
     "g_squash",
     "h_squash",
-    # Initialization
     "init_weights_paper",
     "init_gate_biases",
-    # Metrics
     "paper_accuracy_criterion",
 ]

@@ -510,8 +510,8 @@ def run_torch(
     
     params = list(cell.parameters()) + [W_out, b_out]
     optimizer = torch.optim.SGD(params, lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
     
-    # Training loop
     for epoch in range(num_epochs):
         epoch_loss = 0.0
         correct_predictions = 0
@@ -533,23 +533,23 @@ def run_torch(
                 
                 logits = h @ W_out.T + b_out
                 
-                # Binary cross-entropy with logits for multi-hot targets
                 bce = F.binary_cross_entropy_with_logits(
                     logits, targets[t], reduction='sum'
                 )
                 seq_loss = seq_loss + bce
                 
-                # Track accuracy
                 pred_idx = logits.argmax().item()
                 if targets[t, pred_idx] > 0.5:
                     correct_predictions += 1
                 total_predictions += 1
             
             seq_loss.backward()
+            torch.nn.utils.clip_grad_norm_(params, max_norm=1.0)
             optimizer.step()
             
             epoch_loss += seq_loss.item()
         
+        scheduler.step()
         avg_loss = epoch_loss / num_train
         train_acc = correct_predictions / total_predictions if total_predictions > 0 else 0
         

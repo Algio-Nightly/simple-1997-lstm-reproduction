@@ -362,21 +362,24 @@ def run_torch_paper(
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
     
     def gen_single_sequence():
+        """Paper-exact: values [-1,1], first marker in first 10 steps, target=(X1+X2)/2"""
         L = np.random.randint(int(seq_len * 0.9), int(seq_len * 1.1) + 1)
         X = np.zeros((L, 2), dtype=np.float32)
         
-        X[:, 0] = np.random.uniform(0, 1, L)
+        X[:, 0] = np.random.uniform(-1, 1, L)
         X[0, 1] = -1.0
         X[L-1, 1] = -1.0
         
-        first_half = L // 2
-        pos1 = np.random.randint(1, first_half)
-        pos2 = np.random.randint(first_half, L - 1)
+        marker1_range = min(10, L - 2)
+        pos1 = np.random.randint(1, marker1_range + 1) if marker1_range > 0 else 1
+        
+        remaining = [j for j in range(1, L - 1) if j != pos1]
+        pos2 = remaining[np.random.randint(len(remaining))]
         
         X[pos1, 1] = 1.0
         X[pos2, 1] = 1.0
         
-        target = 0.5 + (X[pos1, 0] + X[pos2, 0]) / 4.0
+        target = (X[pos1, 0] + X[pos2, 0]) / 2.0
         return torch.tensor(X), torch.tensor([[target]], dtype=torch.float32)
     
     consecutive_correct = 0

@@ -50,21 +50,16 @@ def one_hot_encode(symbol: str, num_symbols: int = 8) -> np.ndarray:
 def generate_temporal_order_data(
     seq_len: int = 100,
     num_samples: int = 256,
-    num_relevant: int = 2,  # 2 or 3 symbols
+    num_relevant: int = 2,
     seed: Optional[int] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Generate Temporal Order dataset.
+    Generate Temporal Order dataset per Section 5.6.
     
-    Args:
-        seq_len: Base sequence length
-        num_samples: Number of sequences
-        num_relevant: 2 for 4-class, 3 for 8-class problem
-        seed: Random seed
-    
-    Returns:
-        X: Sequences, shape (num_samples, seq_len, 8)
-        Y: Class labels (one-hot), shape (num_samples, 2^num_relevant)
+    Paper specifies:
+    - Sequence length: 100-110 steps
+    - E at start, B at end (trigger symbol)
+    - Relevant symbols at t1 in [10,20] and t2 in [50,60]
     """
     if seed is not None:
         np.random.seed(seed)
@@ -72,7 +67,6 @@ def generate_temporal_order_data(
     num_classes = 2 ** num_relevant
     distractors = ['d1', 'd2', 'd3', 'd4']
     
-    # Vary sequence length by +/- 10%
     actual_lengths = np.random.randint(seq_len, int(seq_len * 1.1) + 1, num_samples)
     max_len = int(seq_len * 1.1) + 1
     
@@ -82,31 +76,29 @@ def generate_temporal_order_data(
     for i in range(num_samples):
         actual_len = actual_lengths[i]
         
-        # Choose random positions for relevant symbols (well-separated)
-        segment_size = actual_len // (num_relevant + 1)
-        relevant_positions = []
-        for k in range(num_relevant):
-            pos = np.random.randint(
-                k * segment_size + 1,
-                (k + 1) * segment_size
-            )
-            relevant_positions.append(pos)
+        if num_relevant == 2:
+            t1 = np.random.randint(10, 21)
+            t2 = np.random.randint(50, 61)
+            relevant_positions = [t1, t2]
+        else:
+            t1 = np.random.randint(10, 21)
+            t2 = np.random.randint(33, 44)
+            t3 = np.random.randint(66, 77)
+            relevant_positions = [t1, t2, t3]
         
-        # Choose the relevant symbols (X or Y)
         relevant_symbols = np.random.choice(['X', 'Y'], num_relevant)
         
-        # Build sequence
         for t in range(actual_len):
-            if t in relevant_positions:
+            if t == 0:
+                X[i, t] = one_hot_encode('E')
+            elif t == actual_len - 1:
+                X[i, t] = one_hot_encode('B')
+            elif t in relevant_positions:
                 idx = relevant_positions.index(t)
                 X[i, t] = one_hot_encode(relevant_symbols[idx])
             else:
-                # Random distractor
                 X[i, t] = one_hot_encode(np.random.choice(distractors))
         
-        # Compute class label from symbol order
-        # For 2 symbols: XX=0, XY=1, YX=2, YY=3
-        # For 3 symbols: XXX=0, XXY=1, ..., YYY=7
         class_idx = 0
         for k, sym in enumerate(relevant_symbols):
             if sym == 'Y':
@@ -231,7 +223,7 @@ def run_torch(
     num_samples: int = 256,
     num_epochs: int = 100,
     num_relevant: int = 2,
-    hidden_size: int = 10,
+    hidden_size: int = 4,
     learning_rate: float = 0.5,
     seed: Optional[int] = 42,
     log_every: int = 10,
@@ -256,13 +248,24 @@ def run_torch(
     Y_tensor = torch.tensor(Y)
     Y_labels = torch.argmax(Y_tensor, dim=1)
     
+    input_gate_bias = -2.0 if num_relevant == 2 else -2.0
+    
     cell = LSTMCell1997Torch(
         input_size=8,
         hidden_size=hidden_size,
         init_range=0.1,
-        input_gate_bias=-2.0,
+        input_gate_bias=input_gate_bias,
         seed=seed,
     )
+    
+    with torch.no_grad():
+        if num_relevant == 2:
+            cell.b_in[:2] = -2.0
+            cell.b_in[2:] = -4.0
+        else:
+            cell.b_in[:2] = -2.0
+            cell.b_in[2:4] = -4.0
+            cell.b_in[4:] = -6.0
     
     W_out = torch.nn.Parameter(torch.randn(num_classes, hidden_size) * 0.1)
     b_out = torch.nn.Parameter(torch.zeros(num_classes))
@@ -287,6 +290,7 @@ def run_torch(
             loss = F.cross_entropy(logits.unsqueeze(0), Y_labels[sample_idx:sample_idx+1])
             
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(params, max_norm=1.0)
             optimizer.step()
             
             epoch_loss += loss.item()
@@ -326,20 +330,20 @@ def main():
     
     if args.mode == "smoke":
         params = {
-            "seq_len": 50,
+            "seq_len": 100,
             "num_samples": 64,
-            "num_epochs": 30,
+            "num_epochs": 50,
             "num_relevant": args.num_symbols,
-            "hidden_size": 10,
+            "hidden_size": 4,
             "learning_rate": 0.5 if args.num_symbols == 2 else 0.1,
         }
     else:
         params = {
             "seq_len": 100,
             "num_samples": 256,
-            "num_epochs": 100,
+            "num_epochs": 150,
             "num_relevant": args.num_symbols,
-            "hidden_size": 10,
+            "hidden_size": 4,
             "learning_rate": 0.5 if args.num_symbols == 2 else 0.1,
         }
     

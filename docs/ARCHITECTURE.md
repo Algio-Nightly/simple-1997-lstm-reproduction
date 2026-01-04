@@ -31,16 +31,21 @@ To achieve $O(1)$ computational complexity per timestep and prevent gradient exp
 
 In this implementation, `h_prev.detach()` is called before it enters the input and output gate computations, while `s_c_prev` remains attached to the computational graph. This ensures that the network learns primarily through the error signal preserved in the CEC.
 
-## Memory Cell Blocks
+## Memory Cell Blocks & Shared Gates
 
 The 1997 paper introduces "Memory Cell Blocks" to allow the network to store distributed representations more efficiently.
 
 -   **Structure**: A block of size $S$ contains $S$ individual memory cells.
 -   **Shared Gates**: All $S$ cells in a single block share the same **input gate** and **output gate**.
--   **Benefits**:
-    *   Reduces the total number of parameters.
-    *   Forces cells within a block to coordinate (e.g., they all "open" or "close" at the same time).
-    *   Allows different blocks to specialize for different features of the input sequence.
+-   **Parameter Count**: This significantly reduces the number of weights. For example, in the Adding Problem (Section 5.4), the architecture uses 2 blocks of size 2 (4 cells total), resulting in exactly **93 weights**.
+
+## Implementation: LSTM1997PaperBlock
+
+The `LSTM1997PaperBlock` class in `src/aquarius_lstm/cell_torch.py` provides a paper-exact implementation of the shared gate architecture. It supports a `truncate` toggle to enable/disable the "scissors" strategy for verification purposes.
+
+## Gate Pre-training Acceleration
+
+One key deviation from the original paper is the use of **Gate Pre-training**. We found that with the paper's suggested negative biases (-3.0 to -6.0), input gates are too closed for gradients to flow effectively early in training. We use a short pre-training phase to "teach" the gates to respond to marker signals, which accelerates convergence from ~500K sequences to ~30K sequences.
 
 ## Architecture Diagram (Schematic)
 
