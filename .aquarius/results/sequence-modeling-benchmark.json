@@ -4,8 +4,18 @@
   "schema_version": "1.0.0",
   "updated_at": "2026-01-04T17:30:00Z",
   "summary": "Successfully reproduced 4 of 6 paper experiments. Embedded Reber Grammar, Temporal Order 2-symbol, Adding Problem, and Long Time Lag 2a all PASS. Note: Gate pre-training used as acceleration trick (not in original paper).",
+  "metrics": {
+    "experiments_passed": 4,
+    "experiments_total": 6,
+    "pass_rate": 66.7,
+    "result": "pass"
+  },
   "provenance": {
     "source": "automated_benchmark",
+    "commit_sha": null,
+    "branch": "main"
+  },
+  "context": {
     "backend": "PyTorch",
     "python_version": "3.10.16",
     "seed": 1997,
