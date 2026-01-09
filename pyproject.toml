@@ -48,6 +48,11 @@ tinygrad = [
 torch = [
     "torch>=2.0.0",
 ]
+viz = [
+    "matplotlib>=3.7.0",
+    "jupyter>=1.0.0",
+    "nbformat>=5.0.0",
+]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
@@ -55,7 +60,7 @@ dev = [
     "mypy>=1.0.0",
 ]
 all = [
-    "aquarius-lstm-1997[tinygrad,torch,dev]",
+    "aquarius-lstm-1997[tinygrad,torch,viz,dev]",
 ]
 
 [project.urls]

@@ -12,7 +12,7 @@ described in Hochreiter & Schmidhuber (1997), including:
 Paper: https://www.bioinf.jku.at/publications/older/2604.pdf
 
 Usage:
-    # Tinygrad implementation
+    # Tinygrad implementation (requires tinygrad installed)
     from aquarius_lstm import LSTMCell1997
     
     # PyTorch implementation
@@ -24,11 +24,21 @@ __author__ = "Aban Hasan"
 __paper__ = "Hochreiter & Schmidhuber (1997) - Long Short-Term Memory"
 
 from .activations import sigmoid, g_squash, h_squash
-from .cell import LSTMCell1997
-from .cell_torch import LSTMCell1997Torch, LSTMCell1997WithForgetGate
-from .block import LSTMBlock1997
 from .initialization import init_weights_paper, init_gate_biases
 from .metrics import paper_accuracy_criterion
+
+# PyTorch implementations (always available)
+from .cell_torch import LSTMCell1997Torch, LSTMCell1997WithForgetGate
+
+# Tinygrad implementations (optional, requires tinygrad installed)
+try:
+    from .cell import LSTMCell1997
+    from .block import LSTMBlock1997
+    _TINYGRAD_AVAILABLE = True
+except ImportError:
+    LSTMCell1997 = None  # type: ignore
+    LSTMBlock1997 = None  # type: ignore
+    _TINYGRAD_AVAILABLE = False
 
 __all__ = [
     "LSTMCell1997",
