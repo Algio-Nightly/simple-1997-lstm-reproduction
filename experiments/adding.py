@@ -45,9 +45,9 @@ def generate_adding_data(
     Generate Adding Problem dataset as specified in Section 5.4.
     
     When paper_exact=True:
-      - Values: uniform [-1, 1] (not [0, 1])
+      - Values: uniform [-1, 1]
       - Marker 1: in first 10 timesteps only
-      - Target: (X1 + X2) / 2.0 (range [-1, 1])
+      - Target: 0.5 + (X1 + X2) / 4.0 (range [0, 1])
     
     When paper_exact=False (legacy):
       - Values: uniform [0, 1]
@@ -84,7 +84,8 @@ def generate_adding_data(
             
             X1 = X[i, pos1, 0]
             X2 = X[i, pos2, 0]
-            Y[i] = (X1 + X2) / 2.0
+            # Paper target: 0.5 + (X1 + X2) / 4.0 keeps output in [0, 1] interval
+            Y[i] = 0.5 + (X1 + X2) / 4.0
         else:
             X[i, :actual_len, 0] = np.random.uniform(0, 1, actual_len)
             
@@ -342,27 +343,15 @@ def run_torch_paper(
         torch.manual_seed(seed)
         np.random.seed(seed)
     
-    model = LSTM1997PaperBlock(input_size=2, input_gate_biases=(-1.0, -2.0), seed=seed)
+    # Paper Section 5.4: Input gate biases initialized to -3.0 and -6.0
+    # to keep gates initially closed ("abuse problem" remedy)
+    model = LSTM1997PaperBlock(input_size=2, input_gate_biases=(-3.0, -6.0), seed=seed)
     print(f"Parameter count: {model.count_parameters()} (expected: 93)")
-    
-    print("Pre-training gates to respond to markers...")
-    gate_optimizer = torch.optim.Adam([model.W_x, model.b_h], lr=0.1)
-    for epoch in range(500):
-        gate_optimizer.zero_grad()
-        loss = 0
-        for marker, target in [(0.0, 0.05), (1.0, 0.95), (-1.0, 0.05)]:
-            x = torch.tensor([0.5, marker])
-            net = model.W_x[0:2] @ x + model.b_h[0:2]
-            gate = torch.sigmoid(net)
-            loss = loss + ((gate - target) ** 2).sum()
-        loss.backward()
-        gate_optimizer.step()
-    print("Gates pre-trained.")
     
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
     
     def gen_single_sequence():
-        """Paper-exact: values [-1,1], first marker in first 10 steps, target=(X1+X2)/2"""
+        """Paper-exact: values [-1,1], first marker in first 10 steps, target=0.5+(X1+X2)/4"""
         L = np.random.randint(int(seq_len * 0.9), int(seq_len * 1.1) + 1)
         X = np.zeros((L, 2), dtype=np.float32)
         
@@ -379,7 +368,8 @@ def run_torch_paper(
         X[pos1, 1] = 1.0
         X[pos2, 1] = 1.0
         
-        target = (X[pos1, 0] + X[pos2, 0]) / 2.0
+        # Paper target: 0.5 + (X1 + X2) / 4.0 keeps output in [0, 1] interval
+        target = 0.5 + (X[pos1, 0] + X[pos2, 0]) / 4.0
         return torch.tensor(X), torch.tensor([[target]], dtype=torch.float32)
     
     consecutive_correct = 0

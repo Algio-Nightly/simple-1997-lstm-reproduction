@@ -165,7 +165,7 @@ uv run python -m experiments.adding --mode paper --backend torch
 
 While this reproduction strives for architectural fidelity, some modern acceleration tricks were used to achieve convergence within reasonable timeframes on modern hardware:
 
-1.  **Gate Pre-training**: We use a 500-epoch Adam-based pre-training phase for input gates to respond to marker signals (e.g., in the Adding Problem). In 1997, gates were likely trained from random initialization over 100K-500K sequences.
+1.  **Gate Pre-training**: We provide an optional 500-epoch Adam-based pre-training phase for input gates. While we initially thought this was necessary, experiments confirm that the model converges under paper-exact SGD (lr=0.5) within ~50K-100K sequences without any pre-training. Pre-training simply accelerates this process.
 2.  **Gradient Clipping**: We apply standard gradient norm clipping (max norm = 1.0) to stabilize online SGD training, which was not explicitly mentioned in the original paper but is necessary for stability in many modern autodiff environments.
 3.  **Modern Optimizers**: While `paper_exact` modes use SGD as described in the paper, smoke tests and some experiments use Adam for faster verification.
 

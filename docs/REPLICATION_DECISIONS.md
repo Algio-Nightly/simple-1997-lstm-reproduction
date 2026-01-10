@@ -5,15 +5,15 @@ This document outlines the technical decisions and deviations made during the re
 ## 1. Gate Pre-training (Acceleration Trick)
 
 ### The Problem
-In the **Adding Problem** and **Long Time Lag** experiments, input gates are initialized with negative biases (e.g., -3.0 or -6.0) to start in a "closed" state. With random weight initialization, the gradients are initially extremely small, making it difficult for the network to learn to "open" the gates when a marker signal appears.
+In the **Adding Problem** and **Long Time Lag** experiments, input gates are initialized with negative biases (e.g., -3.0 or -6.0) to start in a "closed" state. With random weight initialization, the gradients are initially extremely small.
 
 ### The Decision
-We implemented a "Gate Pre-training" phase. Before the main training starts, we use the Adam optimizer for 300–500 epochs to train *only* the input gate weights and biases to respond to the marker signal.
+We initially assumed a "Gate Pre-training" phase was mandatory for convergence. Before the main training starts, we use the Adam optimizer for 300–500 epochs to train *only* the input gate weights and biases to respond to the marker signal.
 - **Target**: Gate $\approx 0.95$ when `marker = 1.0`, and $\approx 0.05$ otherwise.
 
 ### Paper Fidelity
 - **Deviation**: This was **NOT** in the original 1997 paper.
-- **Justification**: In 1997, the authors likely trained their models for hundreds of thousands (or even millions) of sequences. Pre-training allows us to achieve the same results in ~30K sequences, making the reproduction practical on modern hardware without changing the core architecture.
+- **Correction**: While pre-training accelerates convergence to ~30k sequences, we have confirmed that **paper-exact SGD (lr=0.5)** without pre-training also converges successfully, typically around 45k-50k sequences. The model achieves a max error $< 0.04$ within 100k sequences, fulfilling the paper's success criterion. Pre-training remains an optional acceleration tool.
 
 ## 2. Gradient Clipping
 

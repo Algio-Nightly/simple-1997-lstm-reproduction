@@ -334,6 +334,9 @@ class LSTM1997PaperBlock(nn.Module):
         b_h[1] = input_gate_biases[1]
         b_h[2] = np.random.uniform(-init_range, init_range)
         b_h[3] = np.random.uniform(-init_range, init_range)
+        # All weights (including the bias weights) are randomly initialized in the range [-0.1, 0.1]
+        b_h[4:8] = np.random.uniform(-init_range, init_range)
+        
         self.b_h = nn.Parameter(torch.tensor(b_h))
         
         self.W_o = nn.Parameter(torch.tensor(

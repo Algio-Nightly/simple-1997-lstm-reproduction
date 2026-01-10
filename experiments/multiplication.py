@@ -322,8 +322,8 @@ def run_torch_paper(
         pos2 = np.random.randint(first_half, actual_L - 1)
         X[pos1, 1] = 1.0
         X[pos2, 1] = 1.0
-        if pos1 == 0:
-            X[pos1, 0] = 1.0
+        # Let the network see actual random X1, X2 values
+        # (Removed dead code: "if pos1 == 0: X[pos1, 0] = 1.0")
         target = X[pos1, 0] * X[pos2, 0]
         return torch.tensor(X), torch.tensor([[target]], dtype=torch.float32)
     

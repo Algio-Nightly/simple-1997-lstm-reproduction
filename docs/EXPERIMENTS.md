@@ -44,7 +44,7 @@ This document summarizes the 6 core experiments described in Section 5 of the or
 
 ## 4. Adding Problem (Section 5.4)
 -   **Task:** Two numbers in a sequence of $T$ numbers are marked. The network must output the sum of these two numbers at the end of the sequence.
--   **Input/Output:** Pair of values $(v, m)$, where $v \in [0, 1]$ and $m \in \{0, 1\}$ is a marker. Output is scaled sum: $0.5 + (X_1 + X_2)/4$.
+-   **Input/Output:** Pair of values $(v, m)$, where $v \in [-1, 1]$ and $m \in \{0, 1\}$ is a marker. Output is the average of the two marked values: $(X_1 + X_2)/2$.
 -   **Success Criterion:** Absolute error at sequence end below 0.04.
 -   **Hyperparameters:**
     -   Sequence length $T$: 100, 500, or 1000.

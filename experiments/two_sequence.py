@@ -113,9 +113,11 @@ def generate_two_sequence_data(
                 0, noise_std, actual_len - num_signal_elements
             )
             
-            # Target: classification based on first signal elements
-            # Class 1 if both positive, Class 0 otherwise (XOR-like)
-            Y[i] = 1.0 if (signal1[0] > 0 and signal2[0] > 0) else 0.0
+            # Target: classification based on mean of signal elements
+            # Class 1 if both means positive, Class 0 otherwise
+            mean1 = np.mean(signal1)
+            mean2 = np.mean(signal2)
+            Y[i] = 1.0 if (mean1 > 0 and mean2 > 0) else 0.0
             
         elif task == "3b":
             # Task 3b: Signal elements also have Gaussian noise
@@ -138,8 +140,10 @@ def generate_two_sequence_data(
                 0, noise_std, actual_len - num_signal_elements
             )
             
-            # Same classification as 3a (based on underlying signal)
-            Y[i] = 1.0 if (signal1[0] > 0 and signal2[0] > 0) else 0.0
+            # Same classification as 3a (based on mean of underlying signal)
+            mean1 = np.mean(signal1)
+            mean2 = np.mean(signal2)
+            Y[i] = 1.0 if (mean1 > 0 and mean2 > 0) else 0.0
             
         elif task == "3c":
             # Task 3c: Target is conditional expectation (regression)
@@ -163,10 +167,11 @@ def generate_two_sequence_data(
                 0, noise_std, actual_len - num_signal_elements
             )
             
-            # Target: conditional expectation (mean of signal products)
+            # Target: conditional expectation (product of signal means)
             # Scaled to [0, 1] range
-            product = signal1[0] * signal2[0]
-            Y[i] = 0.5 + 0.1 * product  # Scaled to avoid extreme values
+            mean1 = np.mean(signal1)
+            mean2 = np.mean(signal2)
+            Y[i] = 0.5 + 0.1 * (mean1 * mean2)  # Scaled to avoid extreme values
             
         else:
             raise ValueError(f"Unknown task: {task}. Must be one of: 3a, 3b, 3c")
