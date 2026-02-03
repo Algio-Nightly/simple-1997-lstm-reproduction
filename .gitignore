@@ -116,8 +116,7 @@ wandb/
 
 # ManimGL animation artifacts
 assets/animations/media/
-assets/animations/__pycache__/
-*.mp4
+assets/animations/__pycache__
 *.log
 *.aux
 *.fls
