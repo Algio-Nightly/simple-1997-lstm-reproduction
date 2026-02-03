@@ -123,3 +123,11 @@ assets/animations/__pycache__/
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+/.agent
+/.agents
+/.claude
+/.codex
+/.cursor
+/.gemini
+/.github
+/.sisyphus

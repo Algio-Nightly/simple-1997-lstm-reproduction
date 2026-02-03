@@ -86,18 +86,26 @@ class CECTunnel(InteractiveScene):
         self.wait(1)
         
         # ====================================================================
+        # Fade out coefficient annotation before showing tunnel
+        # ====================================================================
+        self.play(
+            FadeOut(highlight_box),
+            FadeOut(coefficient_label),
+            run_time=0.5
+        )
+        
+        # ====================================================================
         # Visual: The "1.0 Tunnel" representation
         # ====================================================================
-        # Create a visual tunnel (blue rectangle/path)
         tunnel = Rectangle(
             width=4.0,
-            height=0.8,
+            height=0.6,
             color=CEC_BLUE,
             fill_color=CEC_BLUE,
             fill_opacity=0.3,
             stroke_width=3
         )
-        tunnel.shift(DOWN * 1.5)
+        tunnel.shift(DOWN * 1.0)
         
         tunnel_label = Text("The 1.0 Tunnel", color=CEC_BLUE, font_size=28)
         tunnel_label.next_to(tunnel, UP, buff=0.2)
@@ -149,33 +157,26 @@ class CECTunnel(InteractiveScene):
         # ====================================================================
         derivative_eq = Tex(
             R"\frac{\partial s_c(t)}{\partial s_c(t-1)} = 1.0^k = 1.0",
-            font_size=36,
+            font_size=32,
             t2c={
                 "s_c": CEC_BLUE,
                 "1.0": ACCENT_YELLOW,
             }
         )
-        derivative_eq.shift(DOWN * 3.2)
+        derivative_eq.next_to(tunnel, DOWN, buff=0.5)
         
         self.play(Write(derivative_eq), run_time=1.5)
         self.wait(1)
         
         # ====================================================================
-        # Cleanup and Takeaway
-        # ====================================================================
-        self.play(
-            FadeOut(highlight_box),
-            FadeOut(coefficient_label),
-            run_time=0.5
-        )
-        
         # Takeaway message
+        # ====================================================================
         takeaway = Text(
             "Gradient flows through the 1.0 tunnel without vanishing",
             color=TEXT_WHITE,
-            font_size=32
+            font_size=24
         )
-        takeaway.to_edge(DOWN, buff=0.5)
+        takeaway.next_to(derivative_eq, DOWN, buff=0.3)
         
         self.play(
             FadeIn(takeaway, shift=UP * 0.3),
